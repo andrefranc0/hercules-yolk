@@ -51,9 +51,15 @@ RUN cp map-server /home/container/
 
 RUN chown -R container:container /home/container
 
+COPY entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
+
 USER container
 
 ENV USER=container
 ENV HOME=/home/container
 
 WORKDIR /home/container
+
+ENTRYPOINT ["/entrypoint.sh"]
