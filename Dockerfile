@@ -12,7 +12,7 @@ RUN apt update && apt install -y \
     pkg-config \
     zlib1g-dev \
     libpcre3-dev \
-    libmariadb-dev \
+    default-libmysqlclient-dev \
     mariadb-client \
     curl \
     wget \
