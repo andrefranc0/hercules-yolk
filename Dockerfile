@@ -23,6 +23,33 @@ RUN apt update && apt install -y \
 
 RUN useradd -m -d /home/container container
 
+WORKDIR /tmp
+
+RUN git clone --depth 1 https://github.com/HerculesWS/Hercules.git
+
+WORKDIR /tmp/Hercules
+
+RUN chmod +x configure && \
+    ./configure && \
+    make clean && \
+    make server
+
+RUN mkdir -p /home/container
+
+RUN cp -r \
+    conf \
+    db \
+    npc \
+    mapcache \
+    plugins \
+    sql-files \
+    login-server \
+    char-server \
+    map-server \
+    /home/container/
+
+RUN chown -R container:container /home/container
+
 USER container
 
 ENV USER=container
