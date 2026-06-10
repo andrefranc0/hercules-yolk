@@ -33,7 +33,7 @@ WORKDIR /tmp/Hercules
 RUN chmod +x configure && \
     ./configure && \
     make clean && \
-    make sql
+    make sql VERBOSE=1
 
 RUN mkdir -p /home/container
 
