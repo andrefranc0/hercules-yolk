@@ -30,6 +30,10 @@ RUN git clone --depth 1 https://github.com/HerculesWS/Hercules.git
 
 WORKDIR /tmp/Hercules
 
+RUN mv conf/import-tmpl conf/import || true
+
+RUN echo "=== SQL FILES ===" && find sql-files -type f | sort
+
 RUN chmod +x configure && \
     ./configure && \
     make clean && \
