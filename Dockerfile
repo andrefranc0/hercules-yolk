@@ -31,9 +31,9 @@ RUN git clone --depth 1 https://github.com/HerculesWS/Hercules.git
 WORKDIR /tmp/Hercules
 
 RUN chmod +x configure && \
-    ./configure --enable-64bit && \
+    ./configure && \
     make clean && \
-    make server
+    make sql
 
 RUN mkdir -p /home/container
 
