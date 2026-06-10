@@ -35,6 +35,12 @@ RUN chmod +x configure && \
     make clean && \
     make sql VERBOSE=1
 
+RUN echo "=== LOGIN ===" && find /tmp/Hercules -name "login-server"
+
+RUN echo "=== CHAR ===" && find /tmp/Hercules -name "char-server"
+
+RUN echo "=== MAP ===" && find /tmp/Hercules -name "map-server"
+
 RUN mkdir -p /home/container
 
 RUN cp -r \
