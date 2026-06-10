@@ -43,7 +43,6 @@ RUN cp -r \
     npc \
     plugins \
     sql-files \
-    mapcache \
     /home/container/
 
 RUN cp login-server /home/container/
