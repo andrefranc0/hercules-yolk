@@ -10,10 +10,11 @@ RUN apt update && apt install -y \
     autoconf \
     libtool \
     pkg-config \
+    re2c \
     zlib1g-dev \
     libpcre3-dev \
     default-libmysqlclient-dev \
-    mariadb-client \
+    default-mysql-client \
     curl \
     wget \
     unzip \
@@ -30,7 +31,7 @@ RUN git clone --depth 1 https://github.com/HerculesWS/Hercules.git
 WORKDIR /tmp/Hercules
 
 RUN chmod +x configure && \
-    ./configure && \
+    ./configure --enable-64bit && \
     make clean && \
     make server
 
@@ -40,13 +41,13 @@ RUN cp -r \
     conf \
     db \
     npc \
-    mapcache \
     plugins \
     sql-files \
-    login-server \
-    char-server \
-    map-server \
     /home/container/
+
+RUN cp login-server /home/container/
+RUN cp char-server /home/container/
+RUN cp map-server /home/container/
 
 RUN chown -R container:container /home/container
 
