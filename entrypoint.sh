@@ -6,6 +6,18 @@ echo "===================================="
 echo "Hercules Pterodactyl Startup"
 echo "===================================="
 
+echo "Copiando arquivos do build (opt -> container)..."
+
+# binários
+cp -f /opt/hercules/login-server .
+cp -f /opt/hercules/char-server .
+cp -f /opt/hercules/map-server .
+
+# pastas necessárias
+cp -r /opt/hercules/sql-files .
+cp -r /opt/hercules/conf .
+
+# garante import existe
 mkdir -p conf/import
 
 echo "Gerando arquivos de configuração..."
@@ -44,6 +56,18 @@ sql.db_port: ${MYSQL_PORT}
 sql.db_username: ${MYSQL_USER}
 sql.db_password: ${MYSQL_PASSWORD}
 sql.db_database: ${MYSQL_DATABASE}
+
+char_server_ip: ${MYSQL_HOST}
+char_server_port: ${MYSQL_PORT}
+char_server_id: ${MYSQL_USER}
+char_server_pw: ${MYSQL_PASSWORD}
+char_server_db: ${MYSQL_DATABASE}
+
+map_server_ip: ${MYSQL_HOST}
+map_server_port: ${MYSQL_PORT}
+map_server_id: ${MYSQL_USER}
+map_server_pw: ${MYSQL_PASSWORD}
+map_server_db: ${MYSQL_DATABASE}
 EOF
 
 echo "===================================="
