@@ -55,6 +55,13 @@ RUN chown -R container:container /home/container
 
 COPY entrypoint.sh /entrypoint.sh
 
+RUN apt update && apt install -y dos2unix
+RUN dos2unix /entrypoint.sh
+
+RUN ls -l /entrypoint.sh
+RUN file /entrypoint.sh
+RUN head -n 5 /entrypoint.sh
+
 RUN chmod +x /entrypoint.sh
 
 USER container
@@ -64,4 +71,4 @@ ENV HOME=/home/container
 
 WORKDIR /home/container
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
