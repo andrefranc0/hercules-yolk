@@ -34,13 +34,17 @@ WORKDIR /tmp/Hercules
 RUN mv conf/import-tmpl conf/import || true
 
 RUN chmod +x configure && \
-    ./configure && \
+    CFLAGS="-O0" ./configure && \
     make clean && \
-    make -j$(nproc) sql
+    make sql
 
 RUN file login-server
 RUN file char-server
 RUN file map-server
+
+RUN ldd login-server
+RUN ldd char-server
+RUN ldd map-server
 
 RUN mkdir -p /opt/hercules
 
