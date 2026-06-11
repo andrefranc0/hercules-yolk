@@ -30,14 +30,16 @@ RUN cp -r \
 
 RUN cp login-server char-server map-server /opt/hercules/
 
-RUN chown -R container:container /opt/hercules
-
 # ===== ENTRYPOINT =====
 COPY entrypoint.sh /entrypoint.sh
 
 RUN dos2unix /entrypoint.sh && \
     sed -i '1s/^\xEF\xBB\xBF//' /entrypoint.sh && \
     chmod +x /entrypoint.sh
+
+# ===== PERMISSÕES DO PTERODACTYL =====
+# Garante que o usuário container tenha posse completa dos moldes e do script
+RUN chown -R container:container /opt/hercules /entrypoint.sh
 
 USER container
 
