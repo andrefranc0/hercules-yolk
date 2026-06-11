@@ -34,7 +34,7 @@ WORKDIR /tmp/Hercules
 RUN mv conf/import-tmpl conf/import || true
 
 RUN chmod +x configure && \
-    CFLAGS="-O0" ./configure && \
+    CFLAGS="-O0" ./configure --disable-manager && \
     make clean && \
     make sql
 
