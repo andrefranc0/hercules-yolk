@@ -7,7 +7,7 @@ echo "Hercules Pterodactyl Startup"
 echo "===================================="
 
 # Mapeamento estritamente dinâmico vindo das variáveis do painel do Pterodactyl
-TARGET_HOST=${MYSQL_HOST:-"172.18.0.1"} # Pega o valor da sua variável MYSQL_HOST
+TARGET_HOST=${MYSQL_HOST:-"172.17.0.1"} # Agora com o fallback corrigido para a tua interface docker0
 TARGET_PORT=${DB_PORT:-"3306"}
 TARGET_USER=${DB_USERNAME:-$MYSQL_USER}
 TARGET_PASS="${DB_PASSWORD:-$MYSQL_PASSWORD}"
