@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/container
+cd /opt/hercules
 
 echo "===================================="
 echo "Hercules Pterodactyl Startup"
@@ -64,40 +64,20 @@ log_db_pw: ${MYSQL_PASSWORD}
 log_db_db: ${MYSQL_DATABASE}
 EOF
 
-if [ ! -f .database_initialized ]; then
+if [ ! -f /home/container/.database_initialized ]; then
     echo "===================================="
     echo "Importando banco de dados..."
     echo "===================================="
 
-    mysql \
-      -h"${MYSQL_HOST}" \
-      -P"${MYSQL_PORT}" \
-      -u"${MYSQL_USER}" \
-      -p"${MYSQL_PASSWORD}" \
-      "${MYSQL_DATABASE}" < sql-files/main.sql
+    mysql -h"${MYSQL_HOST}" -P"${MYSQL_PORT}" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" < sql-files/main.sql
 
-    mysql \
-      -h"${MYSQL_HOST}" \
-      -P"${MYSQL_PORT}" \
-      -u"${MYSQL_USER}" \
-      -p"${MYSQL_PASSWORD}" \
-      "${MYSQL_DATABASE}" < sql-files/item_db.sql
+    mysql -h"${MYSQL_HOST}" -P"${MYSQL_PORT}" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" < sql-files/item_db.sql
 
-    mysql \
-      -h"${MYSQL_HOST}" \
-      -P"${MYSQL_PORT}" \
-      -u"${MYSQL_USER}" \
-      -p"${MYSQL_PASSWORD}" \
-      "${MYSQL_DATABASE}" < sql-files/mob_db.sql
+    mysql -h"${MYSQL_HOST}" -P"${MYSQL_PORT}" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" < sql-files/mob_db.sql
 
-    mysql \
-      -h"${MYSQL_HOST}" \
-      -P"${MYSQL_PORT}" \
-      -u"${MYSQL_USER}" \
-      -p"${MYSQL_PASSWORD}" \
-      "${MYSQL_DATABASE}" < sql-files/logs.sql
+    mysql -h"${MYSQL_HOST}" -P"${MYSQL_PORT}" -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" < sql-files/logs.sql
 
-    touch .database_initialized
+    touch /home/container/.database_initialized
 
     echo "Banco importado com sucesso."
 fi
@@ -121,6 +101,3 @@ echo "Iniciando Map Server..."
 echo "===================================="
 
 exec ./map-server
-
-echo "Configuração gerada:"
-cat conf/import/login-server.conf
