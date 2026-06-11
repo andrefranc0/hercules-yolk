@@ -1,5 +1,39 @@
 #!/bin/bash
 
+echo "===== DEBUG ====="
+echo "PWD:"
+pwd
+
+echo ""
+echo "USER:"
+whoami
+
+echo ""
+echo "ROOT:"
+ls -la /
+
+echo ""
+echo "/home:"
+ls -la /home
+
+echo ""
+echo "/home/container:"
+ls -la /home/container
+
+echo ""
+echo "/opt:"
+ls -la /opt
+
+echo ""
+echo "/opt/hercules:"
+ls -la /opt/hercules
+
+echo ""
+echo "MYSQL VARIABLES:"
+env | grep -i mysql
+
+echo "================="
+
 cd /opt/hercules
 
 echo "===================================="
@@ -63,6 +97,14 @@ log_db_id: ${MYSQL_USER}
 log_db_pw: ${MYSQL_PASSWORD}
 log_db_db: ${MYSQL_DATABASE}
 EOF
+
+echo ""
+echo "===== GENERATED LOGIN CONFIG ====="
+cat conf/import/login-server.conf
+
+echo ""
+echo "===== GENERATED INTER CONFIG ====="
+cat conf/import/inter-server.conf
 
 if [ ! -f /home/container/.database_initialized ]; then
     echo "===================================="
