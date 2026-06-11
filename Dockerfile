@@ -38,6 +38,10 @@ RUN chmod +x configure && \
     make clean && \
     make -j$(nproc) sql
 
+RUN file login-server
+RUN file char-server
+RUN file map-server
+
 RUN mkdir -p /opt/hercules
 
 RUN cp -r \
