@@ -32,10 +32,6 @@ WORKDIR /tmp/Hercules
 
 RUN mv conf/import-tmpl conf/import || true
 
-RUN echo "=== IMPORT DIR ===" && find conf/import -type f | sort
-
-RUN echo "=== SQL FILES ===" && find sql-files -type f | sort
-
 RUN chmod +x configure && \
     ./configure && \
     make clean && \
