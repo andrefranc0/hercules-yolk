@@ -8,7 +8,7 @@ echo "===================================="
 echo "Hercules Pterodactyl Startup"
 echo "===================================="
 
-# 1. Copia a estrutura base da imagem para o diretório de trabalho se não existirem
+# 1. Sincroniza a estrutura base da imagem para o diretório de trabalho do painel se não existir
 echo "Verificando e sincronizando arquivos base do Hercules..."
 for dir in conf db npc plugins sql-files; do
     if [ ! -d "$dir" ]; then
@@ -17,54 +17,61 @@ for dir in conf db npc plugins sql-files; do
     fi
 done
 
-# Copia os binários atualizados compilados na imagem para a raiz de execução
+# Copia os binários atualizados para o diretório de execução
 cp /opt/hercules/*-server ./ 2>/dev/null || true
 
-echo "Configurando arquivos de import..."
+echo "Configurando arquivos de import com as árvores de blocos corretas..."
 mkdir -p conf/import
 
-# Mapeamento dinâmico do banco do Pterodactyl
+# Mapeamento dinâmico das variáveis de banco de dados do Pterodactyl
 TARGET_HOST=${DB_HOST:-$MYSQL_HOST}
 TARGET_PORT=${DB_PORT:-$MYSQL_PORT}
 TARGET_USER=${DB_USERNAME:-$MYSQL_USER}
 TARGET_PASS=${DB_PASSWORD:-$MYSQL_PASSWORD}
 TARGET_DB=${DB_DATABASE:-$MYSQL_DATABASE}
 
+# Fallback para o IP de alocação caso a variável venha em branco
 BIND_IP=${SERVER_IP:-"0.0.0.0"}
 
 # ===== LOGIN SERVER CONFIG =====
-# Injeta os dados de conexão diretamente dentro do bloco correspondente do Login
+# Estrutura mapeada: As configurações de banco SQL ficam dentro do bloco aninhado 'database'
 cat > conf/import/login-server.conf <<EOF
 login_configuration: {
 	login_port: ${LOGIN_PORT}
-	account: {
+	database: {
 		engine: "auto"
-		sql: {
-			db_hostname: "${TARGET_HOST}"
-			db_port: ${TARGET_PORT}
-			db_username: "${TARGET_USER}"
-			db_password: "${TARGET_PASS}"
-			db_database: "${TARGET_DB}"
-		}
+		db_hostname: "${TARGET_HOST}"
+		db_port: ${TARGET_PORT}
+		db_username: "${TARGET_USER}"
+		db_password: "${TARGET_PASS}"
+		db_database: "${TARGET_DB}"
 	}
 }
 EOF
 
 # ===== CHAR SERVER CONFIG =====
-# Injeta os dados dentro do bloco correspondente do Character Server
+# Estrutura mapeada: userid/passwd de inter-conexão e dados do banco de dados ficam dentro do escopo 'inter'
 cat > conf/import/char-server.conf <<EOF
 char_configuration: {
-	userid: "${SERVER_USERID}"
-	passwd: "${SERVER_PASSWORD}"
-	server_name: "${SERVER_NAME}"
 	login_port: ${LOGIN_PORT}
-	char_ip: "${BIND_IP}"
 	char_port: ${CHAR_PORT}
+	char_ip: "${BIND_IP}"
+	server_name: "${SERVER_NAME}"
+	
+	inter: {
+		userid: "${SERVER_USERID}"
+		passwd: "${SERVER_PASSWORD}"
+		db_hostname: "${TARGET_HOST}"
+		db_port: ${TARGET_PORT}
+		db_username: "${TARGET_USER}"
+		db_password: "${TARGET_PASS}"
+		db_database: "${TARGET_DB}"
+	}
 }
 EOF
 
 # ===== MAP SERVER CONFIG =====
-# Segue a árvore estrutural exata onde o bloco "inter" fica dentro de "map_configuration"
+# Estrutura mapeada: Toda a comunicação e login interno ficam dentro do escopo 'inter'
 cat > conf/import/map-server.conf <<EOF
 map_configuration: {
 	inter: {
