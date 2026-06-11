@@ -6,21 +6,18 @@ echo "===================================="
 echo "Hercules Pterodactyl Startup"
 echo "===================================="
 
-# Mapeamento das variáveis principais da Database Principal do Pterodactyl
-TARGET_HOST=${DB_HOST:-$MYSQL_HOST}
-TARGET_PORT=${DB_PORT:-$MYSQL_PORT}
+# Mapeamento estritamente dinâmico vindo das variáveis do painel do Pterodactyl
+TARGET_HOST=${MYSQL_HOST:-"172.18.0.1"} # Pega o valor da sua variável MYSQL_HOST
+TARGET_PORT=${DB_PORT:-"3306"}
 TARGET_USER=${DB_USERNAME:-$MYSQL_USER}
-TARGET_PASS=${DB_PASSWORD:-$MYSQL_PASSWORD}
+TARGET_PASS="${DB_PASSWORD:-$MYSQL_PASSWORD}"
 TARGET_DB=${DB_DATABASE:-$MYSQL_DATABASE}
 
-# Credenciais exclusivas fornecidas para a DB de Logs
-LOG_HOST=${DB_HOST:-$MYSQL_HOST}
-LOG_PORT=${DB_PORT:-$MYSQL_PORT}
+# Credenciais exclusivas da DB de Logs tratadas com aspas estritas
 LOG_USER="u34_IHtiDl2NZ4"
 LOG_PASS='a@^O@^I3ZIQ7uAmuHDLzED1z'
 LOG_DB="s34_log"
 
-# Fallback para o IP de alocação caso a variável venha em branco
 BIND_IP=${SERVER_IP:-"0.0.0.0"}
 
 echo "------------------------------------"
@@ -44,28 +41,22 @@ fi
 
 echo "------------------------------------"
 echo "TESTE DE CONEXÃO: DATABASE DE LOGS"
-echo "Host: $LOG_HOST:$LOG_PORT"
+echo "Host: $TARGET_HOST:$TARGET_PORT"
 echo "User: $LOG_USER"
 echo "Database: $LOG_DB"
 echo "------------------------------------"
 
-if mysqladmin ping -h "$LOG_HOST" -P "$LOG_PORT" -u "$LOG_USER" -p"$LOG_PASS" --silent; then
+if mysqladmin ping -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$LOG_USER" -p"$LOG_PASS" --silent; then
     echo "[SUCESSO] Conexão com a Database de Logs está OK!"
-    if mysql -h "$LOG_HOST" -P "$LOG_PORT" -u "$LOG_USER" -p"$LOG_PASS" -D "$LOG_DB" -e "SHOW TABLES LIKE 'charlog';" 2>/dev/null | grep -q "charlog"; then
-        echo "[SUCESSO] Tabelas de log encontradas na DB s34_log!"
-    else
-        echo "[AVISO] Conectou na DB de logs, mas a tabela 'charlog' NÃO foi encontrada. Certifique-se de importar o logs.sql nela."
-    fi
 else
     echo "[ERRO] Falha ao conectar na DB de Logs ($LOG_DB):"
-    mysql -h "$LOG_HOST" -P "$LOG_PORT" -u "$LOG_USER" -p"$LOG_PASS" -e "SELECT 1;" 2>&1
+    mysql -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$LOG_USER" -p"$LOG_PASS" -e "SELECT 1;" 2>&1
 fi
 echo "===================================="
 
-# Ativa o encerramento do script caso os passos abaixo falhem
 set -e
 
-# 1. Sincroniza a estrutura base da imagem para o diretório de trabalho se não existir
+# Sincronização dos arquivos base do Hercules
 echo "Verificando e sincronizando arquivos base do Hercules..."
 for dir in conf db npc plugins sql-files; do
     if [ ! -d "$dir" ]; then
@@ -74,24 +65,23 @@ for dir in conf db npc plugins sql-files; do
     fi
 done
 
-# Copia os binários atualizados para o diretório de execução
 cp /opt/hercules/*-server ./ 2>/dev/null || true
 
-echo "Configurando arquivos de import com as árvores de blocos corretas..."
+echo "Configurando arquivos de import..."
 mkdir -p conf/import
 
 # ===== LOGIN SERVER CONFIG =====
 cat > conf/import/login-server.conf <<EOF
 login_configuration: {
 	login_port: ${LOGIN_PORT}
-	account: {
-		engine: "auto"
-		db_hostname: "${TARGET_HOST}"
-		db_port: ${TARGET_PORT}
-		db_username: "${TARGET_USER}"
-		db_password: "${TARGET_PASS}"
-		db_database: "${TARGET_DB}"
-	}
+}
+
+sql_connection: {
+	db_hostname: "${TARGET_HOST}"
+	db_port: ${TARGET_PORT}
+	db_username: "${TARGET_USER}"
+	db_password: "${TARGET_PASS}"
+	db_database: "${TARGET_DB}"
 }
 EOF
 
@@ -99,19 +89,20 @@ EOF
 cat > conf/import/char-server.conf <<EOF
 char_configuration: {
 	server_name: "${SERVER_NAME}"
-	
-	db_hostname: "${TARGET_HOST}"
-	db_port: ${TARGET_PORT}
-	db_username: "${TARGET_USER}"
-	db_password: "${TARGET_PASS}"
-	db_database: "${TARGET_DB}"
-	
 	inter: {
 		userid: "${SERVER_USERID}"
 		passwd: "${SERVER_PASSWORD}"
 		login_port: ${LOGIN_PORT}
 		char_port: ${CHAR_PORT}
 	}
+}
+
+sql_connection: {
+	db_hostname: "${TARGET_HOST}"
+	db_port: ${TARGET_PORT}
+	db_username: "${TARGET_USER}"
+	db_password: "${TARGET_PASS}"
+	db_database: "${TARGET_DB}"
 }
 EOF
 
@@ -130,7 +121,6 @@ map_configuration: {
 EOF
 
 # ===== INTER SERVER CONFIG =====
-# Redefine stritamente a propriedade log_db mapeando-a para a sua nova DB do Pterodactyl
 cat > conf/import/inter-server.conf <<EOF
 inter_configuration: {
 	database: {
