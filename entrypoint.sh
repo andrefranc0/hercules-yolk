@@ -121,3 +121,6 @@ echo "Iniciando Map Server..."
 echo "===================================="
 
 exec ./map-server
+
+echo "Configuração gerada:"
+cat conf/import/login-server.conf
