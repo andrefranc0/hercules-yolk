@@ -1,14 +1,71 @@
 #!/bin/bash
 
-set -e
-
 cd /home/container
 
 echo "===================================="
 echo "Hercules Pterodactyl Startup"
 echo "===================================="
 
-# 1. Sincroniza a estrutura base da imagem para o diretório de trabalho do painel se não existir
+# Mapeamento das variáveis principais da Database Principal do Pterodactyl
+TARGET_HOST=${DB_HOST:-$MYSQL_HOST}
+TARGET_PORT=${DB_PORT:-$MYSQL_PORT}
+TARGET_USER=${DB_USERNAME:-$MYSQL_USER}
+TARGET_PASS=${DB_PASSWORD:-$MYSQL_PASSWORD}
+TARGET_DB=${DB_DATABASE:-$MYSQL_DATABASE}
+
+# Credenciais exclusivas fornecidas para a DB de Logs
+LOG_HOST=${DB_HOST:-$MYSQL_HOST}
+LOG_PORT=${DB_PORT:-$MYSQL_PORT}
+LOG_USER="u34_IHtiDl2NZ4"
+LOG_PASS='a@^O@^I3ZIQ7uAmuHDLzED1z'
+LOG_DB="s34_log"
+
+# Fallback para o IP de alocação caso a variável venha em branco
+BIND_IP=${SERVER_IP:-"0.0.0.0"}
+
+echo "------------------------------------"
+echo "TESTE DE CONEXÃO: DATABASE PRINCIPAL"
+echo "Host: $TARGET_HOST:$TARGET_PORT"
+echo "User: $TARGET_USER"
+echo "Database: $TARGET_DB"
+echo "------------------------------------"
+
+if mysqladmin ping -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$TARGET_USER" -p"$TARGET_PASS" --silent; then
+    echo "[SUCESSO] Conexão com a Database Principal está OK!"
+    if mysql -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$TARGET_USER" -p"$TARGET_PASS" -D "$TARGET_DB" -e "SHOW TABLES LIKE 'login';" 2>/dev/null | grep -q "login"; then
+        echo "[SUCESSO] Tabela 'login' encontrada na DB Principal!"
+    else
+        echo "[AVISO] Tabela 'login' NÃO encontrada na DB Principal. Certifique-se de importar o main.sql."
+    fi
+else
+    echo "[ERRO] Falha ao conectar na DB Principal:"
+    mysql -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$TARGET_USER" -p"$TARGET_PASS" -e "SELECT 1;" 2>&1
+fi
+
+echo "------------------------------------"
+echo "TESTE DE CONEXÃO: DATABASE DE LOGS"
+echo "Host: $LOG_HOST:$LOG_PORT"
+echo "User: $LOG_USER"
+echo "Database: $LOG_DB"
+echo "------------------------------------"
+
+if mysqladmin ping -h "$LOG_HOST" -P "$LOG_PORT" -u "$LOG_USER" -p"$LOG_PASS" --silent; then
+    echo "[SUCESSO] Conexão com a Database de Logs está OK!"
+    if mysql -h "$LOG_HOST" -P "$LOG_PORT" -u "$LOG_USER" -p"$LOG_PASS" -D "$LOG_DB" -e "SHOW TABLES LIKE 'charlog';" 2>/dev/null | grep -q "charlog"; then
+        echo "[SUCESSO] Tabelas de log encontradas na DB s34_log!"
+    else
+        echo "[AVISO] Conectou na DB de logs, mas a tabela 'charlog' NÃO foi encontrada. Certifique-se de importar o logs.sql nela."
+    fi
+else
+    echo "[ERRO] Falha ao conectar na DB de Logs ($LOG_DB):"
+    mysql -h "$LOG_HOST" -P "$LOG_PORT" -u "$LOG_USER" -p"$LOG_PASS" -e "SELECT 1;" 2>&1
+fi
+echo "===================================="
+
+# Ativa o encerramento do script caso os passos abaixo falhem
+set -e
+
+# 1. Sincroniza a estrutura base da imagem para o diretório de trabalho se não existir
 echo "Verificando e sincronizando arquivos base do Hercules..."
 for dir in conf db npc plugins sql-files; do
     if [ ! -d "$dir" ]; then
@@ -23,19 +80,7 @@ cp /opt/hercules/*-server ./ 2>/dev/null || true
 echo "Configurando arquivos de import com as árvores de blocos corretas..."
 mkdir -p conf/import
 
-# Mapeamento dinâmico das variáveis de banco de dados do Pterodactyl
-TARGET_HOST=${DB_HOST:-$MYSQL_HOST}
-TARGET_PORT=${DB_PORT:-$MYSQL_PORT}
-TARGET_USER=${DB_USERNAME:-$MYSQL_USER}
-TARGET_PASS=${DB_PASSWORD:-$MYSQL_PASSWORD}
-TARGET_DB=${DB_DATABASE:-$MYSQL_DATABASE}
-
-# Fallback para o IP de alocação caso a variável venha em branco
-BIND_IP=${SERVER_IP:-"0.0.0.0"}
-
 # ===== LOGIN SERVER CONFIG =====
-# Conforme o login-server.conf original, as variáveis soltas de conexão entram 
-# em account: { ... }, pois ele herda o sql_connection direto ali dentro.
 cat > conf/import/login-server.conf <<EOF
 login_configuration: {
 	login_port: ${LOGIN_PORT}
@@ -51,8 +96,6 @@ login_configuration: {
 EOF
 
 # ===== CHAR SERVER CONFIG =====
-# No Char-Server, o include do sql_connection entra na RAIZ do bloco char_configuration.
-# Portanto, as variáveis de banco precisam ficar soltas direto na raiz do bloco, junto com o bloco 'inter'.
 cat > conf/import/char-server.conf <<EOF
 char_configuration: {
 	server_name: "${SERVER_NAME}"
@@ -73,7 +116,6 @@ char_configuration: {
 EOF
 
 # ===== MAP SERVER CONFIG =====
-# No Map-Server, as propriedades de inter-conexão ficam em map_configuration -> inter.
 cat > conf/import/map-server.conf <<EOF
 map_configuration: {
 	inter: {
@@ -83,6 +125,16 @@ map_configuration: {
 		char_port: ${CHAR_PORT}
 		map_ip: "${BIND_IP}"
 		map_port: ${MAP_PORT}
+	}
+}
+EOF
+
+# ===== INTER SERVER CONFIG =====
+# Redefine stritamente a propriedade log_db mapeando-a para a sua nova DB do Pterodactyl
+cat > conf/import/inter-server.conf <<EOF
+inter_configuration: {
+	database: {
+		log_db: "${LOG_DB}"
 	}
 }
 EOF
