@@ -31,22 +31,17 @@ RUN git clone --depth 1 https://github.com/HerculesWS/Hercules.git
 
 WORKDIR /tmp/Hercules
 
+# evita problemas de template antigo
 RUN mv conf/import-tmpl conf/import || true
 
+# build otimizado e estável para ARM
 RUN chmod +x configure && \
-    CFLAGS="-O0" ./configure --disable-manager && \
+    CFLAGS="-O2" ./configure --disable-manager && \
     make clean && \
-    make sql
+    make -j$(nproc) sql
 
-RUN file login-server
-RUN file char-server
-RUN file map-server
-
-RUN ldd login-server
-RUN ldd char-server
-RUN ldd map-server
-
-RUN mkdir -p /opt/hercules
+# ===== INSTALL DIRETO NO HOME (IMPORTANTE PARA PTERODACTYL) =====
+RUN mkdir -p /home/container
 
 RUN cp -r \
     conf \
@@ -54,20 +49,22 @@ RUN cp -r \
     npc \
     plugins \
     sql-files \
-    /opt/hercules/
+    /home/container/
 
-RUN cp login-server /opt/hercules/
-RUN cp char-server /opt/hercules/
-RUN cp map-server /opt/hercules/
+RUN cp login-server /home/container/
+RUN cp char-server /home/container/
+RUN cp map-server /home/container/
 
-RUN chown -R container:container /opt/hercules
+RUN chown -R container:container /home/container
 
+# ===== ENTRYPOINT =====
 COPY entrypoint.sh /entrypoint.sh
 
 RUN dos2unix /entrypoint.sh
 RUN sed -i '1s/^\xEF\xBB\xBF//' /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# troca para usuário do Pterodactyl
 USER container
 
 ENV USER=container
