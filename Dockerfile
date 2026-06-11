@@ -20,6 +20,7 @@ RUN apt update && apt install -y \
     unzip \
     nano \
     ca-certificates \
+    dos2unix \
  && apt clean
 
 RUN useradd -m -d /home/container container
@@ -55,9 +56,12 @@ RUN chown -R container:container /home/container
 
 COPY entrypoint.sh /entrypoint.sh
 
-RUN apt update && apt install -y dos2unix
 RUN dos2unix /entrypoint.sh
 
+# Remove possível BOM UTF-8
+RUN sed -i '1s/^\xEF\xBB\xBF//' /entrypoint.sh
+
+# Diagnóstico temporário
 RUN ls -l /entrypoint.sh
 RUN file /entrypoint.sh
 RUN head -n 5 /entrypoint.sh
