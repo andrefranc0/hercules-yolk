@@ -38,7 +38,7 @@ RUN chmod +x configure && \
     make clean && \
     make -j$(nproc) sql
 
-RUN mkdir -p /home/container
+RUN mkdir -p /opt/hercules
 
 RUN cp -r \
     conf \
@@ -46,26 +46,18 @@ RUN cp -r \
     npc \
     plugins \
     sql-files \
-    /home/container/
+    /opt/hercules/
 
-RUN cp login-server /home/container/
-RUN cp char-server /home/container/
-RUN cp map-server /home/container/
+RUN cp login-server /opt/hercules/
+RUN cp char-server /opt/hercules/
+RUN cp map-server /opt/hercules/
 
-RUN chown -R container:container /home/container
+RUN chown -R container:container /opt/hercules
 
 COPY entrypoint.sh /entrypoint.sh
 
 RUN dos2unix /entrypoint.sh
-
-# Remove possível BOM UTF-8
 RUN sed -i '1s/^\xEF\xBB\xBF//' /entrypoint.sh
-
-# Diagnóstico temporário
-RUN ls -l /entrypoint.sh
-RUN file /entrypoint.sh
-RUN head -n 5 /entrypoint.sh
-
 RUN chmod +x /entrypoint.sh
 
 USER container
