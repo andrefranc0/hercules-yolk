@@ -33,6 +33,7 @@ TARGET_DB=${DB_DATABASE:-$MYSQL_DATABASE}
 BIND_IP=${SERVER_IP:-"0.0.0.0"}
 
 # ===== LOGIN SERVER CONFIG =====
+# Injeta os dados de conexão diretamente dentro do bloco correspondente do Login
 cat > conf/import/login-server.conf <<EOF
 login_configuration: {
 	login_port: ${LOGIN_PORT}
@@ -50,6 +51,7 @@ login_configuration: {
 EOF
 
 # ===== CHAR SERVER CONFIG =====
+# Injeta os dados dentro do bloco correspondente do Character Server
 cat > conf/import/char-server.conf <<EOF
 char_configuration: {
 	userid: "${SERVER_USERID}"
@@ -62,7 +64,7 @@ char_configuration: {
 EOF
 
 # ===== MAP SERVER CONFIG =====
-# Ajustado para seguir exatamente a árvore estrutural do arquivo principal
+# Segue a árvore estrutural exata onde o bloco "inter" fica dentro de "map_configuration"
 cat > conf/import/map-server.conf <<EOF
 map_configuration: {
 	inter: {
