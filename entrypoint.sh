@@ -3,17 +3,17 @@
 cd /home/container
 
 echo "===================================="
-echo "Hercules Pterodactyl Startup"
+echo "Hercules Pterodactyl Startup (Native ARM)"
 echo "===================================="
 
 # Mapeamento estritamente dinâmico vindo das variáveis do painel do Pterodactyl
-TARGET_HOST=${MYSQL_HOST:-"172.17.0.1"} # Agora com o fallback corrigido para a tua interface docker0
+TARGET_HOST=${MYSQL_HOST:-"172.17.0.1"}
 TARGET_PORT=${DB_PORT:-"3306"}
 TARGET_USER=${DB_USERNAME:-$MYSQL_USER}
 TARGET_PASS="${DB_PASSWORD:-$MYSQL_PASSWORD}"
 TARGET_DB=${DB_DATABASE:-$MYSQL_DATABASE}
 
-# Credenciais exclusivas da DB de Logs tratadas com aspas estritas
+# Credenciais exclusivas da DB de Logs
 LOG_USER="u34_IHtiDl2NZ4"
 LOG_PASS='a@^O@^I3ZIQ7uAmuHDLzED1z'
 LOG_DB="s34_log"
@@ -29,11 +29,6 @@ echo "------------------------------------"
 
 if mysqladmin ping -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$TARGET_USER" -p"$TARGET_PASS" --silent; then
     echo "[SUCESSO] Conexão com a Database Principal está OK!"
-    if mysql -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$TARGET_USER" -p"$TARGET_PASS" -D "$TARGET_DB" -e "SHOW TABLES LIKE 'login';" 2>/dev/null | grep -q "login"; then
-        echo "[SUCESSO] Tabela 'login' encontrada na DB Principal!"
-    else
-        echo "[AVISO] Tabela 'login' NÃO encontrada na DB Principal. Certifique-se de importar o main.sql."
-    fi
 else
     echo "[ERRO] Falha ao conectar na DB Principal:"
     mysql -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$TARGET_USER" -p"$TARGET_PASS" -e "SELECT 1;" 2>&1
@@ -55,17 +50,6 @@ fi
 echo "===================================="
 
 set -e
-
-# Sincronização dos arquivos base do Hercules
-echo "Verificando e sincronizando arquivos base do Hercules..."
-for dir in conf db npc plugins sql-files; do
-    if [ ! -d "$dir" ]; then
-        echo "Copiando pasta $dir para /home/container..."
-        cp -r /opt/hercules/$dir ./
-    fi
-done
-
-cp /opt/hercules/*-server ./ 2>/dev/null || true
 
 echo "Configurando arquivos de import..."
 mkdir -p conf/import
@@ -101,6 +85,7 @@ sql_connection: {
 	db_hostname: "${TARGET_HOST}"
 	db_port: ${TARGET_PORT}
 	db_username: "${TARGET_USER}"
+	db_username: "${TARGET_USER}"
 	db_password: "${TARGET_PASS}"
 	db_database: "${TARGET_DB}"
 }
@@ -130,7 +115,7 @@ inter_configuration: {
 EOF
 
 echo "===================================="
-echo "Iniciando servidores localmente..."
+echo "Iniciando servidores locais..."
 echo "===================================="
 
 ./login-server &
