@@ -20,17 +20,16 @@ done
 # Copia os binários atualizados compilados na imagem para a raiz de execução
 cp /opt/hercules/*-server ./ 2>/dev/null || true
 
-echo "Configurando arquivos de import com a sintaxe libconfig..."
+echo "Configurando arquivos de import..."
 mkdir -p conf/import
 
-# Mapeamento dinâmico: Prioriza o banco nativo do Pterodactyl (DB_*), senão usa o seu do Egg (MYSQL_*)
+# Mapeamento dinâmico do banco do Pterodactyl
 TARGET_HOST=${DB_HOST:-$MYSQL_HOST}
 TARGET_PORT=${DB_PORT:-$MYSQL_PORT}
 TARGET_USER=${DB_USERNAME:-$MYSQL_USER}
 TARGET_PASS=${DB_PASSWORD:-$MYSQL_PASSWORD}
 TARGET_DB=${DB_DATABASE:-$MYSQL_DATABASE}
 
-# Se o SERVER_IP nativo do Pterodactyl falhar, escuta em todas as interfaces do container
 BIND_IP=${SERVER_IP:-"0.0.0.0"}
 
 # ===== LOGIN SERVER CONFIG =====
@@ -63,26 +62,16 @@ char_configuration: {
 EOF
 
 # ===== MAP SERVER CONFIG =====
+# Ajustado para seguir exatamente a árvore estrutural do arquivo principal
 cat > conf/import/map-server.conf <<EOF
 map_configuration: {
-	userid: "${SERVER_USERID}"
-	passwd: "${SERVER_PASSWORD}"
-	char_ip: "${BIND_IP}"
-	char_port: ${CHAR_PORT}
-	map_ip: "${BIND_IP}"
-	map_port: ${MAP_PORT}
-}
-EOF
-
-# ===== INTER SERVER CONFIG =====
-cat > conf/import/inter-server.conf <<EOF
-inter_configuration: {
-	sql: {
-		db_hostname: "${TARGET_HOST}"
-		db_port: ${TARGET_PORT}
-		db_username: "${TARGET_USER}"
-		db_password: "${TARGET_PASS}"
-		db_database: "${TARGET_DB}"
+	inter: {
+		userid: "${SERVER_USERID}"
+		passwd: "${SERVER_PASSWORD}"
+		char_ip: "${BIND_IP}"
+		char_port: ${CHAR_PORT}
+		map_ip: "${BIND_IP}"
+		map_port: ${MAP_PORT}
 	}
 }
 EOF
@@ -91,7 +80,6 @@ echo "===================================="
 echo "Iniciando servidores localmente..."
 echo "===================================="
 
-# Executa os binários locais que agora enxergam as pastas conf/db/npc clonadas na raiz
 ./login-server &
 sleep 3
 
