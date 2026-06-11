@@ -34,11 +34,12 @@ TARGET_DB=${DB_DATABASE:-$MYSQL_DATABASE}
 BIND_IP=${SERVER_IP:-"0.0.0.0"}
 
 # ===== LOGIN SERVER CONFIG =====
-# Estrutura mapeada: As configurações de banco SQL ficam dentro do bloco aninhado 'database'
+# Conforme o login-server.conf original, as variáveis soltas de conexão entram 
+# em account: { ... }, pois ele herda o sql_connection direto ali dentro.
 cat > conf/import/login-server.conf <<EOF
 login_configuration: {
 	login_port: ${LOGIN_PORT}
-	database: {
+	account: {
 		engine: "auto"
 		db_hostname: "${TARGET_HOST}"
 		db_port: ${TARGET_PORT}
@@ -50,28 +51,29 @@ login_configuration: {
 EOF
 
 # ===== CHAR SERVER CONFIG =====
-# Estrutura mapeada: userid/passwd de inter-conexão e dados do banco de dados ficam dentro do escopo 'inter'
+# No Char-Server, o include do sql_connection entra na RAIZ do bloco char_configuration.
+# Portanto, as variáveis de banco precisam ficar soltas direto na raiz do bloco, junto com o bloco 'inter'.
 cat > conf/import/char-server.conf <<EOF
 char_configuration: {
-	login_port: ${LOGIN_PORT}
-	char_port: ${CHAR_PORT}
-	char_ip: "${BIND_IP}"
 	server_name: "${SERVER_NAME}"
+	
+	db_hostname: "${TARGET_HOST}"
+	db_port: ${TARGET_PORT}
+	db_username: "${TARGET_USER}"
+	db_password: "${TARGET_PASS}"
+	db_database: "${TARGET_DB}"
 	
 	inter: {
 		userid: "${SERVER_USERID}"
 		passwd: "${SERVER_PASSWORD}"
-		db_hostname: "${TARGET_HOST}"
-		db_port: ${TARGET_PORT}
-		db_username: "${TARGET_USER}"
-		db_password: "${TARGET_PASS}"
-		db_database: "${TARGET_DB}"
+		login_port: ${LOGIN_PORT}
+		char_port: ${CHAR_PORT}
 	}
 }
 EOF
 
 # ===== MAP SERVER CONFIG =====
-# Estrutura mapeada: Toda a comunicação e login interno ficam dentro do escopo 'inter'
+# No Map-Server, as propriedades de inter-conexão ficam em map_configuration -> inter.
 cat > conf/import/map-server.conf <<EOF
 map_configuration: {
 	inter: {
