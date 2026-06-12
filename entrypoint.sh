@@ -6,21 +6,23 @@ echo "===================================="
 echo "Hercules Pterodactyl Startup (Native ARM)"
 echo "===================================="
 
-# Mapeamento estritamente dinâmico vindo das variáveis do painel do Pterodactyl (Database Principal)
-TARGET_HOST=${MYSQL_HOST:-"172.17.0.1"}
+# Mapeamento dinâmico para a conexão do BANCO DE DADOS (VPS/Host)
+TARGET_HOST=${MYSQL_HOST:-"172.18.0.1"}
 TARGET_PORT=${DB_PORT:-"3306"}
 TARGET_USER=${DB_USERNAME:-$MYSQL_USER}
 TARGET_PASS="${DB_PASSWORD:-$MYSQL_PASSWORD}"
 TARGET_DB=${DB_DATABASE:-$MYSQL_DATABASE}
 
-# Credenciais novas da DB de Logs (Atualizadas do Painel)
+# Credenciais da DB de Logs
 LOG_USER="u36_kTNtc6wNA0"
 LOG_PASS='Yhhc!pyXeILv226w^f.!@33v'
 LOG_DB="s36_log"
 
-BIND_IP=${SERVER_IP:-"0.0.0.0"}
+# VARIÁVEL CENTRAL ATUALIZADA PARA INTERCONEXÃO LOCAL
+# Se não estiver configurada no painel, adota o localhost por padrão
+SERVER_IP_CONFIG=${IP_SERVER:-"127.0.0.1"}
 
-# Ativa o encerramento automático do script caso os passos abaixo falhem de verdade
+# Ativa o encerramento automático caso algo falhe daqui para frente
 set -e
 
 echo "Configurando arquivos de import..."
@@ -68,9 +70,11 @@ map_configuration: {
 	inter: {
 		userid: "${SERVER_USERID}"
 		passwd: "${SERVER_PASSWORD}"
-		char_ip: "${TARGET_HOST}"
+		// Usa a nova variável IP_SERVER para se conectar ao Char localmente
+		char_ip: "${SERVER_IP_CONFIG}"
 		char_port: ${CHAR_PORT}
-		map_ip: "${TARGET_HOST}"
+		// Escuta em todas as interfaces internas para permitir o redirecionamento do painel
+		map_ip: "0.0.0.0"
 		map_port: ${MAP_PORT}
 	}
 }
