@@ -20,45 +20,6 @@ LOG_DB="s36_log"
 
 BIND_IP=${SERVER_IP:-"0.0.0.0"}
 
-echo "------------------------------------"
-echo "TESTE DE CONEXÃO: DATABASE PRINCIPAL"
-echo "Host: $TARGET_HOST:$TARGET_PORT"
-echo "User: $TARGET_USER"
-echo "Database: $TARGET_DB"
-echo "------------------------------------"
-
-if mysqladmin ping -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$TARGET_USER" -p"$TARGET_PASS" --silent; then
-    echo "[SUCESSO] Conexão com a Database Principal está OK!"
-    if mysql -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$TARGET_USER" -p"$TARGET_PASS" -D "$TARGET_DB" -e "SHOW TABLES LIKE 'login';" 2>/dev/null | grep -q "login"; then
-        echo "[SUCESSO] Tabela 'login' encontrada na DB Principal!"
-    else
-        echo "[AVISO] Tabela 'login' NÃO encontrada na DB Principal. Certifique-se de importar o seu arquivo SQL principal nela."
-    fi
-else
-    echo "[ERRO] Falha ao conectar na DB Principal:"
-    mysql -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$TARGET_USER" -p"$TARGET_PASS" -e "SELECT 1;" 2>&1
-fi
-
-echo "------------------------------------"
-echo "TESTE DE CONEXÃO: DATABASE DE LOGS"
-echo "Host: $TARGET_HOST:$TARGET_PORT"
-echo "User: $LOG_USER"
-echo "Database: $LOG_DB"
-echo "------------------------------------"
-
-if mysqladmin ping -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$LOG_USER" -p"$LOG_PASS" --silent; then
-    echo "[SUCESSO] Conexão com a Database de Logs está OK!"
-    if mysql -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$LOG_USER" -p"$LOG_PASS" -D "$LOG_DB" -e "SHOW TABLES LIKE 'charlog';" 2>/dev/null | grep -q "charlog"; then
-        echo "[SUCESSO] Tabelas de log encontradas na DB de Logs!"
-    else
-        echo "[AVISO] Conectou na DB de logs, mas a tabela 'charlog' NÃO foi encontrada. Certifique-se de importar o arquivo de logs nela."
-    fi
-else
-    echo "[ERRO] Falha ao conectar na DB de Logs ($LOG_DB):"
-    mysql -h "$TARGET_HOST" -P "$TARGET_PORT" -u "$LOG_USER" -p"$LOG_PASS" -e "SELECT 1;" 2>&1
-fi
-echo "===================================="
-
 # Ativa o encerramento automático do script caso os passos abaixo falhem de verdade
 set -e
 
@@ -107,9 +68,9 @@ map_configuration: {
 	inter: {
 		userid: "${SERVER_USERID}"
 		passwd: "${SERVER_PASSWORD}"
-		char_ip: "${BIND_IP}"
+		char_ip: "${TARGET_HOST}"
 		char_port: ${CHAR_PORT}
-		map_ip: "${BIND_IP}"
+		map_ip: "${TARGET_HOST}"
 		map_port: ${MAP_PORT}
 	}
 }
